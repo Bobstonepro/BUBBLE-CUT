@@ -1,1 +1,291 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BubbleCrop - Créateur et Découpeur de Messages Chat</title>
+    <!-- Google Fonts: Outfit & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/sf-pro-display" rel="stylesheet">
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- JSZip for client-side ZIP generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-top">
+                <div class="logo">
+                    <i class="fa-solid fa-scissors brand-icon"></i>
+                    <h1>BubbleCrop</h1>
+                    <span class="badge">v1.1</span>
+                </div>
+                <!-- Navigation Tabs -->
+                <nav class="tabs-nav">
+                    <button class="tab-btn active" data-tab="tab-generator">
+                        <i class="fa-solid fa-comments"></i> 1. Créateur de Chat
+                    </button>
+                    <button class="tab-btn" data-tab="tab-cropper">
+                        <i class="fa-solid fa-scissors"></i> 2. Découpeur de Messages
+                    </button>
+                </nav>
+            </div>
+            <p class="subtitle">Créez des captures d'écran de conversations fictives et découpez-les instantanément en messages individuels.</p>
+        </header>
+
+        <!-- MODULE 1: FAKE CHAT GENERATOR -->
+        <div id="tab-generator" class="tab-content active-content">
+            <main class="app-main">
+                <!-- Sidebar Controls -->
+                <aside class="sidebar glass">
+                    <div class="section-title">
+                        <i class="fa-solid fa-sliders"></i>
+                        <h2>Personnaliser le chat</h2>
+                    </div>
+
+                    <!-- Contact Details -->
+                    <div class="control-item">
+                        <label class="control-label" for="gen-contact-name">Nom du contact</label>
+                        <input type="text" id="gen-contact-name" class="text-input" value="Inconnue 💔">
+                    </div>
+
+                    <div class="control-item">
+                        <label class="control-label" for="gen-time">Heure (Barre d'état)</label>
+                        <input type="text" id="gen-time" class="text-input" value="9:41">
+                    </div>
+
+                    <!-- Conversation Messages List -->
+                    <div class="message-list-manager">
+                        <div class="list-header">
+                            <span class="control-label"><i class="fa-solid fa-list"></i> Messages</span>
+                            <span class="badge-count" id="gen-msg-count">0</span>
+                        </div>
+                        
+                        <div class="messages-scroll-container" id="gen-messages-list">
+                            <!-- List of message items with editing inputs -->
+                        </div>
+
+                        <button class="btn btn-secondary btn-full" id="btn-gen-add">
+                            <i class="fa-solid fa-plus"></i> Ajouter un message
+                        </button>
+                    </div>
+
+                    <div class="actions-group">
+                        <button class="btn btn-primary btn-full" id="btn-gen-download">
+                            <i class="fa-solid fa-download"></i> Télécharger la capture (PNG)
+                        </button>
+                        <button class="btn btn-success btn-full" id="btn-gen-send-to-cropper">
+                            <i class="fa-solid fa-right-left"></i> Envoyer au Découpeur <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </aside>
+
+                <!-- Phone Mockup Area -->
+                <section class="workspace glass flex-center">
+                    <div class="workspace-header" style="border:none; padding:0;">
+                        <div class="workspace-title">
+                            <i class="fa-solid fa-mobile-screen-button"></i>
+                            <h2>Aperçu en direct (iPhone)</h2>
+                        </div>
+                        <span class="font-xs text-muted"><i class="fa-solid fa-pen-to-square"></i> Vous pouvez modifier le texte directement dans l'aperçu !</span>
+                    </div>
+
+                    <div class="mockup-container">
+                        <!-- iPhone Simulator wrapper -->
+                        <div class="iphone-mockup" id="iphone-mockup-el">
+                            <!-- Status Bar -->
+                            <div class="iphone-status-bar">
+                                <span class="status-time" id="mock-status-time">9:41</span>
+                                <div class="status-notch"></div>
+                                <div class="status-icons">
+                                    <i class="fa-solid fa-signal"></i>
+                                    <span class="status-network">5G</span>
+                                    <i class="fa-solid fa-battery-three-quarters"></i>
+                                </div>
+                            </div>
+
+                            <!-- Header Bar -->
+                            <div class="iphone-header">
+                                <div class="header-left">
+                                    <i class="fa-solid fa-chevron-left back-icon"></i>
+                                </div>
+                                <div class="header-center">
+                                    <div class="avatar-circle" id="mock-avatar">I</div>
+                                    <div class="contact-name-container">
+                                        <span class="contact-name" id="mock-contact-name" contenteditable="true">Inconnue 💔</span>
+                                        <i class="fa-solid fa-chevron-right details-chevron"></i>
+                                    </div>
+                                </div>
+                                <div class="header-right">
+                                    <i class="fa-solid fa-video video-icon"></i>
+                                </div>
+                            </div>
+
+                            <!-- Chat Feed -->
+                            <div class="iphone-chat-feed" id="mock-chat-feed">
+                                <div class="chat-date">Today 12:59 PM</div>
+                                <!-- Message bubbles will render dynamically here -->
+                            </div>
+
+                            <!-- Bottom Input Bar -->
+                            <div class="iphone-footer">
+                                <div class="plus-btn-circle"><i class="fa-solid fa-plus"></i></div>
+                                <div class="message-input-bar">
+                                    <span class="placeholder-text">Made with Postfully</span>
+                                    <i class="fa-solid fa-microphone footer-mic"></i>
+                                </div>
+                            </div>
+
+                            <!-- Home indicator -->
+                            <div class="home-indicator"></div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <!-- MODULE 2: CHAT BUBBLE CROPPER -->
+        <div id="tab-cropper" class="tab-content hidden">
+            <main class="app-main">
+                <!-- Sidebar Controls -->
+                <aside class="sidebar glass">
+                    <div class="section-title">
+                        <i class="fa-solid fa-sliders"></i>
+                        <h2>Réglages de détection</h2>
+                    </div>
+
+                    <!-- File Upload -->
+                    <div class="upload-container">
+                        <div id="drop-zone" class="drop-zone">
+                            <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+                            <p class="upload-text">Glissez-déposez votre capture d'écran</p>
+                            <p class="upload-hint">ou cliquez pour parcourir</p>
+                        </div>
+                        <input type="file" id="file-input" accept="image/*" style="display: none;">
+                    </div>
+
+                    <div class="controls-group disabled" id="controls-panel">
+                        <!-- Sensitivity / Color Tolerance -->
+                        <div class="control-item">
+                            <div class="control-label">
+                                <span>Sensibilité de détection</span>
+                                <span class="val-display" id="val-sensitivity">15%</span>
+                            </div>
+                            <input type="range" id="param-sensitivity" min="5" max="50" value="15">
+                            <span class="control-desc font-xs">Tolérance de couleur par rapport au fond de l'image.</span>
+                        </div>
+
+                        <!-- Min Height -->
+                        <div class="control-item">
+                            <div class="control-label">
+                                <span>Hauteur min. de bulle</span>
+                                <span class="val-display" id="val-min-height">20 px</span>
+                            </div>
+                            <input type="range" id="param-min-height" min="10" max="100" value="20">
+                            <span class="control-desc font-xs">Ignore les lignes ou éléments trop fins.</span>
+                        </div>
+
+                        <!-- Margin Crop Top (Header ignore) -->
+                        <div class="control-item">
+                            <div class="control-label">
+                                <span>Zone morte Haute (Header)</span>
+                                <span class="val-display" id="val-margin-top">12%</span>
+                            </div>
+                            <input type="range" id="param-margin-top" min="0" max="40" value="12">
+                            <span class="control-desc font-xs">Ignore les infos de contact / barre d'état.</span>
+                        </div>
+
+                        <!-- Margin Crop Bottom (Footer ignore) -->
+                        <div class="control-item">
+                            <div class="control-label">
+                                <span>Zone morte Basse (Footer)</span>
+                                <span class="val-display" id="val-margin-bottom">8%</span>
+                            </div>
+                            <input type="range" id="param-margin-bottom" min="0" max="40" value="8">
+                            <span class="control-desc font-xs">Ignore le champ d'écriture / clavier.</span>
+                        </div>
+
+                        <button class="btn btn-primary btn-full" id="btn-detect">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Relancer la détection
+                        </button>
+                    </div>
+                </aside>
+
+                <!-- Editor Workspace -->
+                <section class="workspace glass">
+                    <div class="workspace-header">
+                        <div class="workspace-title">
+                            <i class="fa-solid fa-crop-simple"></i>
+                            <h2>Éditeur interactif</h2>
+                        </div>
+                        <div class="workspace-actions disabled" id="workspace-actions">
+                            <button class="btn btn-secondary btn-sm" id="btn-add-box" title="Ajouter un cadre de découpe">
+                               <i class="fa-solid fa-plus"></i> Ajouter un cadre
+                            </button>
+                            <button class="btn btn-danger-outline btn-sm" id="btn-clear-boxes" title="Supprimer tous les cadres">
+                                <i class="fa-solid fa-trash-can"></i> Tout vider
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="canvas-container" id="canvas-container">
+                        <!-- Before state -->
+                        <div class="empty-state" id="empty-state">
+                            <div class="empty-illustration">
+                                <div class="illus-bubble bubble-left"></div>
+                                <div class="illus-bubble bubble-right"></div>
+                            </div>
+                            <h3>Aucune image chargée</h3>
+                            <p>Importez une capture d'écran de conversation ou générez-en une pour démarrer la détection des messages.</p>
+                            <button class="btn btn-primary" id="btn-select-dummy">
+                                <i class="fa-solid fa-image"></i> Parcourir une image
+                            </button>
+                        </div>
+
+                        <!-- Editor layers -->
+                        <div class="editor-wrapper hidden" id="editor-wrapper">
+                            <img id="source-image" src="" alt="Source" style="display: none;">
+                            <canvas id="editor-canvas"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="workspace-footer font-xs hidden" id="editor-help">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span><strong>Astuce :</strong> Faites glisser les bords des cadres pour les redimensionner. Cliquez et glissez sur une zone vide pour ajouter un nouveau cadre. Sélectionnez un cadre et appuyez sur Suppr pour le retirer.</span>
+                    </div>
+                </section>
+            </main>
+
+            <!-- Output Previews -->
+            <section class="results-container glass hidden" id="results-panel">
+                <div class="results-header">
+                    <div class="results-title">
+                        <i class="fa-solid fa-images"></i>
+                        <h2>Messages extraits (<span id="results-count">0</span>)</h2>
+                    </div>
+                    <button class="btn btn-success" id="btn-download-all">
+                        <i class="fa-solid fa-file-zipper"></i> Télécharger toutes les images (.ZIP)
+                    </button>
+                </div>
+
+                <!-- Previews Grid -->
+                <div class="results-grid" id="results-grid">
+                    <!-- Cropped message cards go here -->
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Floating Toast for user feedback -->
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
 
